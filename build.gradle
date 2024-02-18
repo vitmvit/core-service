@@ -1,0 +1,52 @@
+plugins {
+    id 'java'
+    id "io.freefair.lombok" version "8.4"
+}
+
+group 'ru.clevertec.news'
+version '1.0'
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+}
+
+ext {
+    swaggerVersion = '2.3.0'
+    jwtVersion = '4.4.0'
+    securityVersion = '6.2.1'
+    starterVersion = '1.0'
+    springVersion = '3.2.1'
+    swaggerVersion = '2.3.0'
+    mapstructVersion = '1.4.1.Final'
+    postgreVersion = '42.6.0'
+    liquibaseVersion = '4.25.1'
+    testcontainersVersion = '1.19.4'
+}
+
+dependencies {
+    implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:${swaggerVersion}"
+    implementation "com.auth0:java-jwt:${jwtVersion}"
+    implementation "org.springframework.boot:spring-boot-starter-security:${springVersion}"
+    implementation "org.springframework.boot:spring-boot-starter-data-redis:${springVersion}"
+    implementation "ru.clevertec.news:cache-lib:${starterVersion}"
+    implementation "ru.clevertec.news:dto-lib:${starterVersion}"
+    implementation "ru.clevertec.news:exception-error-handler-spring-boot-starter:${starterVersion}"
+    implementation "org.liquibase:liquibase-core:${liquibaseVersion}"
+    implementation "org.postgresql:postgresql:${postgreVersion}"
+    implementation "org.springframework.boot:spring-boot-starter-web:${springVersion}"
+    implementation "org.springframework.boot:spring-boot-starter-data-jpa:${springVersion}"
+    implementation "org.springframework.boot:spring-boot-starter-validation:${springVersion}"
+    implementation "org.mapstruct:mapstruct:${mapstructVersion}"
+
+    annotationProcessor "org.mapstruct:mapstruct-processor:${mapstructVersion}"
+
+    testImplementation "org.springframework.security:spring-security-test:${securityVersion}"
+    testImplementation "org.testcontainers:postgresql:${testcontainersVersion}"
+    testImplementation "org.testcontainers:testcontainers:${testcontainersVersion}"
+    testImplementation "org.springframework.boot:spring-boot-starter-test:${springVersion}"
+}
+
+test {
+    useJUnitPlatform()
+}

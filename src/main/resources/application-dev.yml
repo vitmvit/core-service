@@ -1,0 +1,33 @@
+server:
+  port: 8080
+
+cache:
+  algorithm: lru
+  capacity: 15
+
+spring:
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://localhost:5432/news_management
+    username: root
+    password: root
+  liquibase:
+    enabled: true
+    change-log: changelog-master.xml
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+security:
+  jwt:
+    token:
+      secret-key: "secretkey"
+
+springdoc:
+  swagger-ui:
+    enabled: true
+    path: /api/doc/
