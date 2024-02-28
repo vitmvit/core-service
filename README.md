@@ -109,6 +109,7 @@ ADMIN, USER, JOURNALIST, SUBSCRIBER
 #### Стартеты:
 
 - exception-error-handler-spring-boot-starter - реализует отлов ошибок
+- logging-spring-boot-starter - реализует логирование
 
 ## Реализация
 

@@ -32,6 +32,7 @@ dependencies {
     implementation "org.springframework.boot:spring-boot-starter-data-redis:${springVersion}"
     implementation "ru.clevertec.news:cache-lib:${starterVersion}"
     implementation "ru.clevertec.news:dto-lib:${starterVersion}"
+    implementation "ru.clevertec.news:logging-spring-boot-starter:${starterVersion}"
     implementation "ru.clevertec.news:exception-error-handler-spring-boot-starter:${starterVersion}"
     implementation "org.liquibase:liquibase-core:${liquibaseVersion}"
     implementation "org.postgresql:postgresql:${postgreVersion}"

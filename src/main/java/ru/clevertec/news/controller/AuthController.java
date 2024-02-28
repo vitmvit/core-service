@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import ru.clevertec.news.annotation.Log;
 import ru.clevertec.news.dto.auth.JwtDto;
 import ru.clevertec.news.dto.auth.SignInDto;
 import ru.clevertec.news.dto.auth.SignUpDto;
@@ -19,6 +20,7 @@ import static ru.clevertec.news.constant.Constant.USERNAME_NOT_EXIST;
 /**
  * Контроллер аутентификации.
  */
+@Log
 @RestController
 @AllArgsConstructor
 @RequestMapping("/api")

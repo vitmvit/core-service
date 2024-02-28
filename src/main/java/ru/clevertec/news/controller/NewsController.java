@@ -5,6 +5,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import ru.clevertec.news.annotation.Log;
 import ru.clevertec.news.dto.NewsDto;
 import ru.clevertec.news.dto.create.NewsCreateDto;
 import ru.clevertec.news.dto.update.NewsUpdateDto;
@@ -16,6 +17,7 @@ import static ru.clevertec.news.constant.Constant.OFFSET_DEFAULT;
 /**
  * Контроллер новостей
  */
+@Log
 @RestController
 @AllArgsConstructor
 @RequestMapping("/api/news")
