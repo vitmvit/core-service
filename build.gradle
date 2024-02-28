@@ -12,7 +12,7 @@ repositories {
 }
 
 ext {
-    swaggerVersion = '2.3.0'
+    springFeignVersion = '4.1.0'
     jwtVersion = '4.4.0'
     securityVersion = '6.2.1'
     starterVersion = '1.0'
@@ -26,6 +26,7 @@ ext {
 
 dependencies {
     implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:${swaggerVersion}"
+    implementation "org.springframework.cloud:spring-cloud-starter-openfeign:${springFeignVersion}"
     implementation "com.auth0:java-jwt:${jwtVersion}"
     implementation "org.springframework.boot:spring-boot-starter-security:${springVersion}"
     implementation "org.springframework.boot:spring-boot-starter-data-redis:${springVersion}"

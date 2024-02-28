@@ -10,22 +10,48 @@ import org.springframework.web.bind.annotation.RestController;
 import ru.clevertec.news.dto.auth.JwtDto;
 import ru.clevertec.news.dto.auth.SignInDto;
 import ru.clevertec.news.dto.auth.SignUpDto;
-import ru.clevertec.news.service.AuthService;
+import ru.clevertec.news.exception.InvalidJwtException;
+import ru.clevertec.news.feign.AuthClient;
 
-@AllArgsConstructor
+import static ru.clevertec.news.constant.Constant.USERNAME_IS_EXIST;
+import static ru.clevertec.news.constant.Constant.USERNAME_NOT_EXIST;
+
+/**
+ * Контроллер аутентификации.
+ */
 @RestController
+@AllArgsConstructor
 @RequestMapping("/api")
 public class AuthController {
+    private final AuthClient authClient;
 
-    private final AuthService authService;
-
+    /**
+     * Регистрация нового пользователя.
+     *
+     * @param dto данные регистрации пользователя
+     * @return JWT токен
+     */
     @PostMapping("/signUp")
     public ResponseEntity<JwtDto> signUp(@RequestBody @Valid SignUpDto dto) {
-        return ResponseEntity.ok(authService.signUp(dto));
+        try {
+            return ResponseEntity.ok(authClient.signUp(dto));
+        } catch (Exception e) {
+            throw new InvalidJwtException(USERNAME_IS_EXIST);
+        }
     }
 
+    /**
+     * Аутентификация пользователя.
+     *
+     * @param dto данные аутентификации пользователя
+     * @return JWT токен
+     */
     @PostMapping("/signIn")
     public ResponseEntity<JwtDto> signIn(@RequestBody @Valid SignInDto dto) {
-        return ResponseEntity.ok(authService.signIn(dto));
+        try {
+            return ResponseEntity.ok(authClient.signIn(dto));
+        } catch (Exception e) {
+            throw new InvalidJwtException(USERNAME_NOT_EXIST);
+        }
     }
 }

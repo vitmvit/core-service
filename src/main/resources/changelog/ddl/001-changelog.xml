@@ -6,9 +6,9 @@
 
     <changeSet id="001" author="vitikova" dbms="postgresql">
         <sql>
-            CREATE SEQUENCE comment_id_seq INCREMENT 1 MINVALUE 1 MAXVALUE 9223372036854775807 START 2 CACHE 1;
-            CREATE SEQUENCE news_id_seq INCREMENT 1 MINVALUE 1 MAXVALUE 9223372036854775807 START 4 CACHE 1;
-            CREATE SEQUENCE users_id_seq INCREMENT 1 MINVALUE 1 MAXVALUE 9223372036854775807 CACHE 1;
+            CREATE SEQUENCE comment_id_seq INCREMENT 1 MINVALUE 1 MAXVALUE 9223372036854775807 START 11 CACHE 1;
+            CREATE SEQUENCE news_id_seq INCREMENT 1 MINVALUE 1 MAXVALUE 9223372036854775807 START 21 CACHE 1;
+            CREATE SEQUENCE users_id_seq INCREMENT 1 MINVALUE 1 MAXVALUE 9223372036854775807 START 9 CACHE 1;
 
             CREATE TABLE "public"."comment"
             (
@@ -22,10 +22,11 @@
 
             CREATE TABLE "public"."news"
             (
-                "id"    bigint DEFAULT nextval('news_id_seq') NOT NULL,
-                "time"  timestamp(6),
-                "text"  character varying(255),
-                "title" character varying(255),
+                "id"      bigint DEFAULT nextval('news_id_seq') NOT NULL,
+                "time"    timestamp(6),
+                "text"    character varying(255),
+                "title"   character varying(255),
+                "user_id" bigint                                NOT NULL,
                 CONSTRAINT "news_pkey" PRIMARY KEY ("id")
             ) WITH (oids = false);
 

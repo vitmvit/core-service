@@ -1,11 +1,9 @@
 server:
   port: 8080
 
-cache:
-  algorithm: lru
-  capacity: 15
-
 spring:
+  main:
+    allow-bean-definition-overriding: true
   datasource:
     driver-class-name: org.postgresql.Driver
     url: jdbc:postgresql://localhost:5432/news_management
@@ -21,11 +19,6 @@ spring:
     properties:
       hibernate:
         format_sql: true
-
-security:
-  jwt:
-    token:
-      secret-key: "secretkey"
 
 springdoc:
   swagger-ui:
