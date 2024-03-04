@@ -10,7 +10,7 @@ import ru.clevertec.news.dto.auth.SignUpDto;
 /**
  * Клиент Feign для взаимодействия с сервисом аутентификации.
  */
-@FeignClient(contextId = "authClient", value = "authService", url = "http://localhost:8081/api/auth")
+@FeignClient(contextId = "authClient", value = "${feign.auth-service.value}", url = "${feign.auth-service.url}")
 public interface AuthClient {
 
     /**

@@ -1,13 +1,20 @@
-cache:
-  algorithm: lfu
-  capacity: 15
-
 spring:
+  application:
+    name: core-service
   datasource:
-    username: test
-    password: test
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://localhost:5432/news_management
+    username: root
+    password: root
   jpa:
     hibernate:
-      ddl-auto: create
-  liquibase:
-    enabled: false
+      ddl-auto: none
+
+feign:
+  auth-service:
+    value: authService
+    url: http://localhost:9998/api/auth
+  news-service:
+    value: newsService
+    url-news: http://localhost:9998/api/news
+    url-comments: http://localhost:9998/api/comments

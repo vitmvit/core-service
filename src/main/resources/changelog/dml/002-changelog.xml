@@ -102,13 +102,14 @@
 
             INSERT INTO "public"."users" ("id", "login", "password", "role")
             VALUES (1, 'Admin', '$2a$10$SHt9oDxjugnvbgw2gNsp6.Lz9PjjkL0E7rVVBU.g7P7nBlMWeLQZG', 'ADMIN'),
-                   (2, 'username123', '$2a$10$SHt9oDxjugnvbgw2gNsp6.Lz9PjjkL0E7rVVBU.g7P7nBlMWeLQZG', 'SUBSCRIBER'),
-                   (3, 'fearlessrunner', '$2a$10$SHt9oDxjugnvbgw2gNsp6.Lz9PjjkL0E7rVVBU.g7P7nBlMWeLQZG', 'SUBSCRIBER'),
-                   (4, 'musiclover27', '$2a$10$SHt9oDxjugnvbgw2gNsp6.Lz9PjjkL0E7rVVBU.g7P7nBlMWeLQZG', 'SUBSCRIBER'),
-                   (5, 'adventureseeker', '$2a$10$SHt9oDxjugnvbgw2gNsp6.Lz9PjjkL0E7rVVBU.g7P7nBlMWeLQZG', 'SUBSCRIBER'),
-                   (6, 'techguru99', '$2a$10$SHt9oDxjugnvbgw2gNsp6.Lz9PjjkL0E7rVVBU.g7P7nBlMWeLQZG', 'SUBSCRIBER'),
-                   (7, 'smarthacker76', '$2a$10$SHt9oDxjugnvbgw2gNsp6.Lz9PjjkL0E7rVVBU.g7P7nBlMWeLQZG', 'SUBSCRIBER'),
-                   (8, 'coolcat85', '$2a$10$SHt9oDxjugnvbgw2gNsp6.Lz9PjjkL0E7rVVBU.g7P7nBlMWeLQZG', 'SUBSCRIBER');
+                   (2, 'username123', '$2a$10$MHOIRGjJCV73yMhj9C5xfuiuyKw/Y1z844F311SrmtrByDi2v3u0m', 'SUBSCRIBER'),
+                   (3, 'fearlessrunner', '$2a$10$w/.omFvDbFd3oIxWaBPI4OlFHOT4lEgN/SOY47k6.JyrDLRa94fU6', 'SUBSCRIBER'),
+                   (4, 'musiclover27', '$2a$10$t7ABxoTIrEQgPuK0NxhdsuS9tVWq9mCp6.XR55az3rioWWK5OuWfO', 'SUBSCRIBER'),
+                   (5, 'adventureseeker', '$2a$10$8Sd2vgP8cdRCkh8iaxxUQ.zGkBRgU8bkNoSrqYTgAzvpsdvOo6TwO',
+                    'SUBSCRIBER'),
+                   (6, 'smarthacker76', '$2a$10$79zInVEj2YgCJldHzKGBReBJ6RTdFHtrltEbwGXmwyuWjnTPkbgl6', 'JOURNALIST'),
+                   (7, 'techguru99', '$2a$10$3Vw2tNHM6Gx5r7B0S8ANG.nimDarj.pqQRaZ/x/8ie1SfIayOYdwO', 'JOURNALIST'),
+                   (8, 'coolcat85', '$2a$10$cGcurZejfMkpvAXT35pdwepx5TFm.eslJAwWdfZDDJIbP3k2NYTRq', 'JOURNALIST');
         </sql>
     </changeSet>
 </databaseChangeLog>

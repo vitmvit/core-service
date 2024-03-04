@@ -13,7 +13,7 @@ import static ru.clevertec.news.constant.Constant.OFFSET_DEFAULT;
 /**
  * Клиент Feign для взаимодействия с сервисом новостей
  */
-@FeignClient(contextId = "newsClient", value = "newsService", url = "http://localhost:8082/api/news")
+@FeignClient(contextId = "newsClient", value = "${feign.news-service.value}", url = "${feign.news-service.url-news}")
 public interface NewsClient {
 
     /**

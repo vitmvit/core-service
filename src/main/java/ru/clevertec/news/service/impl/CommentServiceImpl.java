@@ -1,6 +1,8 @@
 package ru.clevertec.news.service.impl;
 
 import lombok.AllArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,6 +24,7 @@ import ru.clevertec.news.service.CommentService;
 public class CommentServiceImpl implements CommentService {
 
     private final CommentClient commentClient;
+    private static final Logger logger = LoggerFactory.getLogger(CommentServiceImpl.class);
 
     /**
      * Найти комментарий по его идентификатору
@@ -33,8 +36,10 @@ public class CommentServiceImpl implements CommentService {
     @Override
     public CommentDto findCommentById(Long id) {
         try {
+            logger.info("Service: find comment by id: " + id);
             return commentClient.getCommentById(id);
         } catch (Exception e) {
+            logger.error("Service: Entity not found error");
             throw new EntityNotFoundException();
         }
     }
@@ -51,8 +56,10 @@ public class CommentServiceImpl implements CommentService {
     @Override
     public Page<CommentDto> searchCommentsByText(Integer offset, Integer limit, String fragment) {
         try {
+            logger.info("Service: search comment by text fragment: " + fragment);
             return commentClient.searchCommentsByText(offset, limit, fragment);
         } catch (Exception e) {
+            logger.error("Service: Empty list error");
             throw new EmptyListException();
         }
     }
@@ -69,8 +76,10 @@ public class CommentServiceImpl implements CommentService {
     @Override
     public Page<CommentDto> searchCommentsByUsername(Integer offset, Integer limit, String fragment) {
         try {
+            logger.info("Service: search comment by username fragment: " + fragment);
             return commentClient.searchCommentByUsername(offset, limit, fragment);
         } catch (Exception e) {
+            logger.error("Service: Empty list error");
             throw new EmptyListException();
         }
     }
@@ -86,8 +95,10 @@ public class CommentServiceImpl implements CommentService {
     @Override
     public CommentDto createComment(CommentCreateDto commentCreateDto, String auth) {
         try {
+            logger.debug("Service: create comment: " + commentCreateDto);
             return commentClient.createComment(commentCreateDto, auth);
         } catch (Exception e) {
+            logger.error("Service: No access error");
             throw new NoAccessError();
         }
     }
@@ -103,8 +114,10 @@ public class CommentServiceImpl implements CommentService {
     @Override
     public CommentDto updateComment(CommentUpdateDto commentUpdateDto, String auth) {
         try {
+            logger.debug("Service: update comment: " + commentUpdateDto);
             return commentClient.updateComment(commentUpdateDto, auth);
         } catch (Exception e) {
+            logger.error("Service: No access error");
             throw new NoAccessError();
         }
     }
@@ -120,8 +133,10 @@ public class CommentServiceImpl implements CommentService {
     @Override
     public void deleteComment(Long id, Long userId, String auth) {
         try {
+            logger.debug("Service: delete comment by id: " + id);
             commentClient.deleteComment(id, userId, auth);
         } catch (Exception e) {
+            logger.error("Service: No access error");
             throw new NoAccessError();
         }
     }

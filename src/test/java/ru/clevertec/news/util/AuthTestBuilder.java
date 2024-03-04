@@ -5,7 +5,6 @@ import ru.clevertec.news.dto.auth.JwtDto;
 import ru.clevertec.news.dto.auth.SignInDto;
 import ru.clevertec.news.dto.auth.SignUpDto;
 import ru.clevertec.news.dto.constant.RoleName;
-import ru.clevertec.news.model.User;
 
 @Builder(setterPrefix = "with")
 public class AuthTestBuilder {
@@ -31,11 +30,11 @@ public class AuthTestBuilder {
         return new SignInDto(login, password);
     }
 
-    public User buildUser() {
-        return new User(login, password, role);
+    public JwtDto buildJwtDto() {
+        return new JwtDto("Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJTVUJTQ1JJQkVSIiwidXNlcm5hbWUiOiJTVUJTQ1JJQkVSIiwicm9sZSI6IlNVQlNDUklCRVIiLCJleHAiOjE3MDkxNzU1NTV9.uuZclt5mJniONm3Ax_8zAElwOgzk-QqQtoXgMQqPiXo");
     }
 
-    public JwtDto buildJwtDto() {
-        return new JwtDto("login");
+    public Long getId() {
+        return id;
     }
 }

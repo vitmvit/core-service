@@ -30,10 +30,6 @@ public class NewsTestBuilder {
     @Builder.Default
     private Long userId = 1L;
 
-//    public News buildNews() {
-//        return new News(id, time, title, text, userId);
-//    }
-
     public NewsDto buildNewsDto() {
         return new NewsDto(id, time, title, text, commentDtoList, userId);
     }
@@ -43,7 +39,7 @@ public class NewsTestBuilder {
     }
 
     public NewsUpdateDto buildNewsUpdateDto() {
-        var news = new NewsUpdateDto(id, title, text);
+        var news = new NewsUpdateDto(id, title, text, userId);
         return news;
     }
 
@@ -57,5 +53,9 @@ public class NewsTestBuilder {
 
     public String getTitle() {
         return title;
+    }
+
+    public String getToken() {
+        return "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJTVUJTQ1JJQkVSIiwidXNlcm5hbWUiOiJTVUJTQ1JJQkVSIiwicm9sZSI6IlNVQlNDUklCRVIiLCJleHAiOjE3MDkxNzU1NTV9.uuZclt5mJniONm3Ax_8zAElwOgzk-QqQtoXgMQqPiXo";
     }
 }

@@ -12,6 +12,9 @@ repositories {
 }
 
 ext {
+    logbackVersion = '1.5.0'
+    slf4jVersion = '2.0.12'
+    wireMockVersion = '3.0.1'
     springFeignVersion = '4.1.0'
     jwtVersion = '4.4.0'
     securityVersion = '6.2.1'
@@ -25,6 +28,8 @@ ext {
 }
 
 dependencies {
+    implementation "ch.qos.logback:logback-core:${logbackVersion}"
+    implementation "org.slf4j:slf4j-api:${slf4jVersion}"
     implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:${swaggerVersion}"
     implementation "org.springframework.cloud:spring-cloud-starter-openfeign:${springFeignVersion}"
     implementation "com.auth0:java-jwt:${jwtVersion}"
@@ -43,6 +48,7 @@ dependencies {
 
     annotationProcessor "org.mapstruct:mapstruct-processor:${mapstructVersion}"
 
+    testImplementation "com.github.tomakehurst:wiremock-standalone:${wireMockVersion}"
     testImplementation "org.springframework.security:spring-security-test:${securityVersion}"
     testImplementation "org.testcontainers:postgresql:${testcontainersVersion}"
     testImplementation "org.testcontainers:testcontainers:${testcontainersVersion}"
