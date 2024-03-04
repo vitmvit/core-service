@@ -110,7 +110,7 @@ ADMIN, USER, JOURNALIST, SUBSCRIBER
 #### Стартеты:
 
 - [exception-error-handler-spring-boot-starter](https://github.com/vitmvit/exception-error-handler-spring-boot-starter/tree/dev)
-  - реализует отлов ошибок
+  _-_ реализует отлов ошибок
 - [logging-spring-boot-starter](https://github.com/vitmvit/logging-spring-boot-starter/tree/dev) - реализует логирование
 
 ## Реализация
