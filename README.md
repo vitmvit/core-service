@@ -97,19 +97,21 @@ ADMIN, USER, JOURNALIST, SUBSCRIBER
 #### Микросервисы:
 
 - core-service - единая точка входа в приложение
-- auth-service - микросервис для создания и проверки JWT токена, а также проверки доступа пользователя к функционалу
-- news-service - микросервис для работы с новостями
-- comments-service - микросервис для работы с комментарими
+- [auth-service](https://github.com/vitmvit/auth-service/tree/dev) - микросервис для создания и проверки JWT токена, а
+  также проверки доступа пользователя к функционалу
+- [news-service](https://github.com/vitmvit/news-service/tree/dev) - микросервис для работы с новостями
+- [comments-service](https://github.com/vitmvit/comments-service/tree/dev) - микросервис для работы с комментарими
 
 #### Библиотеки:
 
-- dto-lib - содержит необходимые dto для всех микросервисов
-- cache-lib - содержит реализацию кастомных кэшей
+- [dto-lib](https://github.com/vitmvit/dto-lib/tree/dev) - содержит необходимые dto для всех микросервисов
+- [cache-lib](https://github.com/vitmvit/cache-lib/tree/dev) - содержит реализацию кастомных кэшей
 
 #### Стартеты:
 
-- exception-error-handler-spring-boot-starter - реализует отлов ошибок
-- logging-spring-boot-starter - реализует логирование
+- [exception-error-handler-spring-boot-starter](https://github.com/vitmvit/exception-error-handler-spring-boot-starter/tree/dev)
+  - реализует отлов ошибок
+- [logging-spring-boot-starter](https://github.com/vitmvit/logging-spring-boot-starter/tree/dev) - реализует логирование
 
 ## Реализация
 
