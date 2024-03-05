@@ -2,7 +2,7 @@ spring:
   application:
     name: core-service
   profiles:
-    active: dev
+    active: docker
   liquibase:
     enabled: true
     change-log: changelog-master.xml

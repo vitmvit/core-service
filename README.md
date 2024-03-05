@@ -113,6 +113,23 @@ ADMIN, USER, JOURNALIST, SUBSCRIBER
   _-_ реализует отлов ошибок
 - [logging-spring-boot-starter](https://github.com/vitmvit/logging-spring-boot-starter/tree/dev) - реализует логирование
 
+## Запуск
+
+Перед запуском необходимо запустить docker-compose для создания контейнера с postgreSQL и создания таблицы
+news_management.
+
+Для работы с приложением необходимо выкачать все 4 микросервиса, библиотеки и стартеры. Библиотеки и стартеры необходимо
+сбилдить в локальный maven репозиторий.
+
+[Ссылка для входа в adminer](http://localhost/?pgsql=postgres)
+
+| Поля             | Данные     |
+|------------------|------------|
+| Движок           | PostgreSQL |
+| Сервер           | postgres   |
+| Имя пользователя | root       |
+| Пароль           | root       |
+
 ## Реализация
 
 В каждом запросе необходимо передавать token в заголовке
