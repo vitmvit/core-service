@@ -94,13 +94,19 @@ ADMIN, USER, JOURNALIST, SUBSCRIBER
 
 ## Состав
 
+#### Docker:
+
+- [docker](https://github.com/vitmvit/docker)
+
 #### Микросервисы:
 
-- core-service - единая точка входа в приложение
+- [core-service](https://github.com/vitmvit/core-service/tree/dev) - единая точка входа в приложение
 - [auth-service](https://github.com/vitmvit/auth-service/tree/dev) - микросервис для создания и проверки JWT токена, а
   также проверки доступа пользователя к функционалу
 - [news-service](https://github.com/vitmvit/news-service/tree/dev) - микросервис для работы с новостями
 - [comments-service](https://github.com/vitmvit/comments-service/tree/dev) - микросервис для работы с комментарими
+- [spring-cloud-service](https://github.com/vitmvit/spring-cloud-service/tree/dev) - хранит необходимые yml файлы для
+  оставшихся микросервисов
 
 #### Библиотеки:
 
@@ -115,11 +121,47 @@ ADMIN, USER, JOURNALIST, SUBSCRIBER
 
 ## Запуск
 
-Перед запуском необходимо запустить docker-compose для создания контейнера с postgreSQL и создания таблицы
-news_management.
+Для запуска приложения необходимо выкачать следующие проекты и расположить их в одной папке:
 
-Для работы с приложением необходимо выкачать все 4 микросервиса, библиотеки и стартеры. Библиотеки и стартеры необходимо
-сбилдить в локальный maven репозиторий.
+- [docker](https://github.com/vitmvit/docker)
+- [core-service](https://github.com/vitmvit/core-service/tree/dev)
+- [auth-service](https://github.com/vitmvit/auth-service/tree/dev)
+- [news-service](https://github.com/vitmvit/news-service/tree/dev)
+- [comments-service](https://github.com/vitmvit/comments-service/tree/dev)
+- [spring-cloud-service](https://github.com/vitmvit/spring-cloud-service/tree/dev)
+
+##### Локальный запуск
+
+Для локального запуска необходимо иметь установленный redis на локальном компьютере. И иметь бд postgres
+news_management (можно запустить docker-compose для поднятия бд, закомментировав все контейнеры кроме adminer и
+postgres).
+
+Так же необходимо собрать следующие проекты в локальном репозитории maven:
+
+- [dto-lib](https://github.com/vitmvit/dto-lib/tree/dev)
+- [cache-lib](https://github.com/vitmvit/cache-lib/tree/dev)
+- [exception-error-handler-spring-boot-starter](https://github.com/vitmvit/exception-error-handler-spring-boot-starter/tree/dev)
+- [logging-spring-boot-starter](https://github.com/vitmvit/logging-spring-boot-starter/tree/dev)
+
+Порядок запуска микросервисов:
+
+- spring-cloud-service
+- core-service
+- auth-service
+- news-service
+- comments-service
+
+##### Запуск в docker
+
+Для запуска в контейнерах необходимо выполнить следующие команды с каждым микросервисом, для того, чтобы в папке
+каждого проекта build/libs собрались .jar файлы:
+
+```text
+clean -> assemble
+```
+
+Перед запуском необходимо запустить docker-compose для создания контейнеров (Перейти в папку где лежит docker-compose и
+выполнить команду docker compose up).
 
 [Ссылка для входа в adminer](http://localhost/?pgsql=postgres)
 
