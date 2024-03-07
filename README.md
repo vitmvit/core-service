@@ -73,7 +73,7 @@
 21. _*_ Реализацию логирования п.9 и обработку исключений п.10 вынести в отдельные
     spring-boot-starter-ы.
 22. ** Сущности веб интерфейса (DTO) должны генерироваться при сборке проекта из .proto файлов (
-    см. https://github.com/google/protobuf-gradle-plugin)
+    см. https://github.com/google/protobuf-gradle-plugin) РЕАЛИЗОВАННО ТОЛЬКО НА МИКРОСЕРВИСЕ AUTH-SERVICE
 
 ## Swagger
 
