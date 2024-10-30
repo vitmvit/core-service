@@ -100,9 +100,9 @@ ADMIN, USER, JOURNALIST, SUBSCRIBER
 
 #### Микросервисы:
 
-- [core-service](https://github.com/vitmvit/core-service/tree/dev) - единая точка входа в приложение
-- [auth-service](https://github.com/vitmvit/auth-service/tree/dev) - микросервис для создания и проверки JWT токена, а
-  также проверки доступа пользователя к функционалу
+- [core-service](https://github.com/vitmvit/core-service/tree/dev) - единая точка входа в приложение, с безопасностью и
+  проверкой доступа пользователя к функционалу
+- [auth-service](https://github.com/vitmvit/auth-service/tree/dev) - микросервис для создания и проверки JWT токена
 - [news-service](https://github.com/vitmvit/news-service/tree/dev) - микросервис для работы с новостями
 - [comments-service](https://github.com/vitmvit/comments-service/tree/dev) - микросервис для работы с комментарими
 - [spring-cloud-service](https://github.com/vitmvit/spring-cloud-service/tree/dev) - хранит необходимые yml файлы для
