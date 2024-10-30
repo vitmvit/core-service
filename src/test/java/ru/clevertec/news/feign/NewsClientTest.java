@@ -9,9 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
-import ru.clevertec.news.dto.NewsDto;
-import ru.clevertec.news.dto.create.NewsCreateDto;
-import ru.clevertec.news.dto.update.NewsUpdateDto;
+import ru.clevertec.news.config.PostgresSqlContainerInitializer;
 import ru.clevertec.news.util.CommentTestBuilder;
 import ru.clevertec.news.util.NewsTestBuilder;
 
@@ -23,18 +21,18 @@ import static ru.clevertec.news.constant.Constant.OFFSET;
 
 @SpringBootTest
 @ActiveProfiles("test")
-@WireMockTest(httpPort = 9998)
-public class NewsClientTest {
+@WireMockTest(httpPort = 9999)
+public class NewsClientTest extends PostgresSqlContainerInitializer {
 
     @Autowired
-    ObjectMapper objectMapper;
+    private ObjectMapper objectMapper;
     @Autowired
     private NewsClient newsClient;
 
     @Test
     public void getNewsByIdShouldReturnExpectedNewsDto() throws JsonProcessingException {
-        NewsDto newsDto = NewsTestBuilder.builder().build().buildNewsDto();
-        Long id = CommentTestBuilder.builder().build().getId();
+        var newsDto = NewsTestBuilder.builder().build().buildNewsDto();
+        var id = CommentTestBuilder.builder().build().getId();
 
         stubFor(get(urlPathTemplate("/api/news/{id}"))
                 .withPathParam("id", matching("^(.*)([0-9]+)$"))
@@ -52,7 +50,7 @@ public class NewsClientTest {
 
     @Test
     public void getNewsByIdShouldReturnExceptionAndStatus404() {
-        Long id = NewsTestBuilder.builder().build().getId();
+        var id = NewsTestBuilder.builder().build().getId();
 
         stubFor(get(urlPathTemplate("/api/news/{id}"))
                 .withHeader("Content-Type", equalTo("application/json"))
@@ -65,12 +63,12 @@ public class NewsClientTest {
 
     @Test
     public void getByIdWithCommentsShouldReturnExpectedNewsDto() throws JsonProcessingException {
-        NewsDto newsDto = NewsTestBuilder.builder().build().buildNewsDto();
-        Long id = CommentTestBuilder.builder().build().getId();
+        var newsDto = NewsTestBuilder.builder().build().buildNewsDto();
+        var id = CommentTestBuilder.builder().build().getId();
 
         stubFor(get(urlPathTemplate("/api/news/{id}/comments"))
-                .withQueryParam("offset", matching("^(.*)([0-9]+)$"))
-                .withQueryParam("limit", matching("^(.*)([0-9]+)$"))
+                .withQueryParam("pageNumber", matching("^(.*)([0-9]+)$"))
+                .withQueryParam("pageSize", matching("^(.*)([0-9]+)$"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
@@ -85,11 +83,11 @@ public class NewsClientTest {
 
     @Test
     public void getByIdWithCommentsShouldReturnExceptionAndStatus404() {
-        Long id = CommentTestBuilder.builder().build().getId();
+        var id = CommentTestBuilder.builder().build().getId();
 
         stubFor(get(urlPathTemplate("/api/news/{id}/comments"))
-                .withQueryParam("offset", matching("^(.*)([0-9]+)$"))
-                .withQueryParam("limit", matching("^(.*)([0-9]+)$"))
+                .withQueryParam("pageNumber", matching("^(.*)([0-9]+)$"))
+                .withQueryParam("pageSize", matching("^(.*)([0-9]+)$"))
                 .willReturn(aResponse()
                         .withStatus(404)));
 
@@ -98,13 +96,11 @@ public class NewsClientTest {
 
     @Test
     public void createNewsShouldReturnExpectedNewsDto() throws JsonProcessingException {
-        NewsCreateDto newsCreateDto = NewsTestBuilder.builder().build().buildNewsCreateDto();
-        NewsDto newsDto = NewsTestBuilder.builder().build().buildNewsDto();
-        String token = NewsTestBuilder.builder().build().getToken();
+        var newsCreateDto = NewsTestBuilder.builder().build().buildNewsCreateDto();
+        var newsDto = NewsTestBuilder.builder().build().buildNewsDto();
 
         stubFor(post(urlPathTemplate("/api/news"))
                 .withHeader("Content-Type", equalTo("application/json"))
-                .withHeader("Authorization", equalTo(token))
                 .withRequestBody(
                         equalToJson(objectMapper.writeValueAsString(newsCreateDto))
                 )
@@ -113,7 +109,7 @@ public class NewsClientTest {
                         .withHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
                         .withBody(objectMapper.writeValueAsString(newsDto))));
 
-        var actual = newsClient.createNews(newsCreateDto, token);
+        var actual = newsClient.create(newsCreateDto);
 
         assertEquals(newsDto.getId(), actual.getId());
         assertEquals(newsDto.getTitle(), actual.getTitle());
@@ -122,31 +118,27 @@ public class NewsClientTest {
     }
 
     @Test
-    public void createNewsShouldReturnExceptionAndStatus403() throws JsonProcessingException {
-        NewsCreateDto newsCreateDto = NewsTestBuilder.builder().build().buildNewsCreateDto();
-        String token = NewsTestBuilder.builder().build().getToken();
+    public void createShouldReturnExceptionAndStatus403() throws JsonProcessingException {
+        var newsCreateDto = NewsTestBuilder.builder().build().buildNewsCreateDto();
 
         stubFor(post(urlPathTemplate("/api/news"))
                 .withHeader("Content-Type", equalTo("application/json"))
-                .withHeader("Authorization", equalTo(token))
                 .withRequestBody(
                         equalToJson(objectMapper.writeValueAsString(newsCreateDto))
                 )
                 .willReturn(aResponse()
                         .withStatus(403)));
 
-        assertThrows(FeignException.class, () -> newsClient.createNews(newsCreateDto, token));
+        assertThrows(FeignException.class, () -> newsClient.create(newsCreateDto));
     }
 
     @Test
-    public void updateNewsShouldReturnExpectedCommentDto() throws JsonProcessingException {
-        NewsUpdateDto newsUpdateDto = NewsTestBuilder.builder().build().buildNewsUpdateDto();
-        NewsDto newsDto = NewsTestBuilder.builder().build().buildNewsDto();
-        String token = NewsTestBuilder.builder().build().getToken();
+    public void updateShouldReturnExpectedCommentDto() throws JsonProcessingException {
+        var newsUpdateDto = NewsTestBuilder.builder().build().buildNewsUpdateDto();
+        var newsDto = NewsTestBuilder.builder().build().buildNewsDto();
 
         stubFor(put(urlPathTemplate("/api/news"))
                 .withHeader("Content-Type", equalTo("application/json"))
-                .withHeader("Authorization", equalTo(token))
                 .withRequestBody(
                         equalToJson(objectMapper.writeValueAsString(newsUpdateDto))
                 )
@@ -155,7 +147,7 @@ public class NewsClientTest {
                         .withHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
                         .withBody(objectMapper.writeValueAsString(newsDto))));
 
-        var actual = newsClient.updateNews(newsUpdateDto, token);
+        var actual = newsClient.update(newsUpdateDto);
 
         assertEquals(newsDto.getId(), actual.getId());
         assertEquals(newsDto.getTitle(), actual.getTitle());
@@ -164,67 +156,57 @@ public class NewsClientTest {
     }
 
     @Test
-    public void updateNewsShouldReturnExceptionAndStatus404() throws JsonProcessingException {
-        NewsUpdateDto newsUpdateDto = NewsTestBuilder.builder().build().buildNewsUpdateDto();
-        String token = NewsTestBuilder.builder().build().getToken();
+    public void updateShouldReturnExceptionAndStatus404() throws JsonProcessingException {
+        var newsUpdateDto = NewsTestBuilder.builder().build().buildNewsUpdateDto();
 
         stubFor(put(urlPathTemplate("/api/news"))
                 .withHeader("Content-Type", equalTo("application/json"))
-                .withHeader("Authorization", equalTo(token))
                 .withRequestBody(
                         equalToJson(objectMapper.writeValueAsString(newsUpdateDto))
                 )
                 .willReturn(aResponse()
                         .withStatus(404)));
 
-        assertThrows(FeignException.class, () -> newsClient.updateNews(newsUpdateDto, token));
+        assertThrows(FeignException.class, () -> newsClient.update(newsUpdateDto));
     }
 
     @Test
-    public void updateNewsShouldReturnExceptionAndStatus403() throws JsonProcessingException {
-        NewsUpdateDto newsUpdateDto = NewsTestBuilder.builder().build().buildNewsUpdateDto();
-        String token = CommentTestBuilder.builder().build().getToken();
+    public void updateShouldReturnExceptionAndStatus403() throws JsonProcessingException {
+        var newsUpdateDto = NewsTestBuilder.builder().build().buildNewsUpdateDto();
 
         stubFor(put(urlPathTemplate("/api/news"))
                 .withHeader("Content-Type", equalTo("application/json"))
-                .withHeader("Authorization", equalTo(token))
                 .withRequestBody(
                         equalToJson(objectMapper.writeValueAsString(newsUpdateDto))
                 )
                 .willReturn(aResponse()
                         .withStatus(403)));
 
-        assertThrows(FeignException.class, () -> newsClient.updateNews(newsUpdateDto, token));
+        assertThrows(FeignException.class, () -> newsClient.update(newsUpdateDto));
     }
 
     @Test
-    public void deleteNewsShouldReturnStatus200() {
-        Long id = NewsTestBuilder.builder().build().getId();
-        String token = NewsTestBuilder.builder().build().getToken();
+    public void deleteShouldReturnStatus200() {
+        var id = NewsTestBuilder.builder().build().getId();
 
-        stubFor(delete(urlPathTemplate("/api/news/{id}/{userId}"))
-                .withHeader("Authorization", equalTo(token))
+        stubFor(delete(urlPathTemplate("/api/news/{id}"))
                 .withPathParam("id", matching("^(.*)([0-9]+)$"))
-                .withPathParam("userId", matching("^(.*)([0-9]+)$"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withBody("")));
 
-        assertDoesNotThrow(() -> newsClient.deleteNews(id, id, token));
+        assertDoesNotThrow(() -> newsClient.delete(id));
     }
 
     @Test
-    public void deleteNewsShouldReturnExceptionAndStatus403() {
-        Long id = NewsTestBuilder.builder().build().getId();
-        String token = NewsTestBuilder.builder().build().getToken();
+    public void deleteShouldReturnExceptionAndStatus403() {
+        var id = NewsTestBuilder.builder().build().getId();
 
-        stubFor(delete(urlPathTemplate("/api/news/{id}/{userId}"))
-                .withHeader("Authorization", equalTo(token))
+        stubFor(delete(urlPathTemplate("/api/news/{id}"))
                 .withPathParam("id", matching("^(.*)([0-9]+)$"))
-                .withPathParam("userId", matching("^(.*)([0-9]+)$"))
                 .willReturn(aResponse()
                         .withStatus(403)));
 
-        assertThrows(FeignException.class, () -> newsClient.deleteNews(id, id, token));
+        assertThrows(FeignException.class, () -> newsClient.delete(id));
     }
 }

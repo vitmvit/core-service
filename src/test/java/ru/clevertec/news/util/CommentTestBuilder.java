@@ -20,7 +20,7 @@ public class CommentTestBuilder {
     private LocalDateTime time = LocalDateTime.of(2024, 1, 3, 9, 12, 15, 156);
 
     @Builder.Default
-    private String username = "NameOne";
+    private String username = "TestUser";
 
     @Builder.Default
     private String text = "Text";
@@ -43,17 +43,5 @@ public class CommentTestBuilder {
 
     public Long getId() {
         return id;
-    }
-
-    public String getText() {
-        return text;
-    }
-
-    public String getUsername() {
-        return username;
-    }
-
-    public String getToken() {
-        return "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJTVUJTQ1JJQkVSIiwidXNlcm5hbWUiOiJTVUJTQ1JJQkVSIiwicm9sZSI6IlNVQlNDUklCRVIiLCJleHAiOjE3MDkxNzU1NTV9.uuZclt5mJniONm3Ax_8zAElwOgzk-QqQtoXgMQqPiXo";
     }
 }

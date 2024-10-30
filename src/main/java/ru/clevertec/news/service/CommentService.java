@@ -1,20 +1,21 @@
 package ru.clevertec.news.service;
 
-import org.springframework.data.domain.Page;
 import ru.clevertec.news.dto.CommentDto;
 import ru.clevertec.news.dto.create.CommentCreateDto;
+import ru.clevertec.news.dto.page.PageContentDto;
 import ru.clevertec.news.dto.update.CommentUpdateDto;
 
 public interface CommentService {
-    CommentDto findCommentById(Long id);
 
-    Page<CommentDto> searchCommentsByText(Integer offset, Integer limit, String fragment);
+    CommentDto getById(Long id);
 
-    Page<CommentDto> searchCommentsByUsername(Integer offset, Integer limit, String fragment);
+    PageContentDto<CommentDto> getAll(int pageNumber, int pageSize, String username, String text);
 
-    CommentDto createComment(CommentCreateDto commentCreateDto, String auth);
+    PageContentDto<CommentDto> getByNewsId(int pageNumber, int pageSize, Long id);
 
-    CommentDto updateComment(CommentUpdateDto commentUpdateDto, String auth);
+    CommentDto create(CommentCreateDto dto);
 
-    void deleteComment(Long id, Long userId, String auth);
+    CommentDto update(CommentUpdateDto dto);
+
+    void delete(Long id);
 }

@@ -2,58 +2,38 @@ package ru.clevertec.news.controller;
 
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.*;
 import ru.clevertec.news.annotation.Log;
 import ru.clevertec.news.dto.auth.JwtDto;
 import ru.clevertec.news.dto.auth.SignInDto;
 import ru.clevertec.news.dto.auth.SignUpDto;
-import ru.clevertec.news.exception.InvalidJwtException;
-import ru.clevertec.news.feign.AuthClient;
+import ru.clevertec.news.service.AuthService;
 
-import static ru.clevertec.news.constant.Constant.USERNAME_IS_EXIST;
-import static ru.clevertec.news.constant.Constant.USERNAME_NOT_EXIST;
+import static ru.clevertec.news.constant.Constant.AUTHORIZATION_HEADER;
 
-/**
- * Контроллер аутентификации.
- */
 @Log
 @RestController
 @AllArgsConstructor
-@RequestMapping("/api")
+@RequestMapping("/api/auth")
 public class AuthController {
-    private final AuthClient authClient;
 
-    /**
-     * Регистрация нового пользователя.
-     *
-     * @param dto данные регистрации пользователя
-     * @return JWT токен
-     */
+    private final AuthService authService;
+
     @PostMapping("/signUp")
-    public ResponseEntity<JwtDto> signUp(@RequestBody @Valid SignUpDto dto) {
-        try {
-            return ResponseEntity.ok(authClient.signUp(dto));
-        } catch (Exception e) {
-            throw new InvalidJwtException(USERNAME_IS_EXIST);
-        }
+    @ResponseStatus(HttpStatus.OK)
+    public JwtDto signUp(@RequestBody @Valid SignUpDto dto) {
+        return authService.signUp(dto);
     }
 
-    /**
-     * Аутентификация пользователя.
-     *
-     * @param dto данные аутентификации пользователя
-     * @return JWT токен
-     */
     @PostMapping("/signIn")
-    public ResponseEntity<JwtDto> signIn(@RequestBody @Valid SignInDto dto) {
-        try {
-            return ResponseEntity.ok(authClient.signIn(dto));
-        } catch (Exception e) {
-            throw new InvalidJwtException(USERNAME_NOT_EXIST);
-        }
+    @ResponseStatus(HttpStatus.OK)
+    public JwtDto signIn(@RequestBody @Valid SignInDto dto) {
+        return authService.signIn(dto);
+    }
+
+    @PostMapping("/check")
+    public boolean check(@RequestHeader(AUTHORIZATION_HEADER) String auth) {
+        return authService.check(auth);
     }
 }

@@ -10,28 +10,28 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
-import ru.clevertec.news.dto.auth.JwtDto;
-import ru.clevertec.news.dto.auth.SignInDto;
-import ru.clevertec.news.dto.auth.SignUpDto;
+import ru.clevertec.news.config.PostgresSqlContainerInitializer;
 import ru.clevertec.news.util.AuthTestBuilder;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.junit.Assert.assertThrows;
+import static ru.clevertec.news.constant.Constant.AUTHORIZATION_HEADER;
 
 @SpringBootTest
 @ActiveProfiles("test")
-@WireMockTest(httpPort = 9998)
-public class AuthClientTest {
+@WireMockTest(httpPort = 9999)
+public class AuthClientTest extends PostgresSqlContainerInitializer {
 
     @Autowired
-    ObjectMapper objectMapper;
+    private ObjectMapper objectMapper;
+
     @Autowired
     private AuthClient authClient;
 
     @Test
     public void signUpShouldReturnJwtToken() throws JsonProcessingException {
-        SignUpDto signUpDto = AuthTestBuilder.builder().build().buildSignUpDto();
-        JwtDto jwtDto = AuthTestBuilder.builder().build().buildJwtDto();
+        var signUpDto = AuthTestBuilder.builder().build().buildSignUpDto();
+        var jwtDto = AuthTestBuilder.builder().build().buildJwtDto();
 
         stubFor(post(urlPathEqualTo("/api/auth/signUp"))
                 .withHeader("Content-Type", equalTo("application/json"))
@@ -50,7 +50,7 @@ public class AuthClientTest {
 
     @Test
     public void signUpShouldReturnException() throws JsonProcessingException {
-        SignUpDto signUpDto = AuthTestBuilder.builder().build().buildSignUpDto();
+        var signUpDto = AuthTestBuilder.builder().build().buildSignUpDto();
 
         stubFor(post(urlPathEqualTo("/api/auth/signUp"))
                 .withHeader("Content-Type", equalTo("application/json"))
@@ -65,8 +65,8 @@ public class AuthClientTest {
 
     @Test
     public void signInShouldReturnJwtToken() throws JsonProcessingException {
-        SignInDto signInDto = AuthTestBuilder.builder().build().buildSignInDto();
-        JwtDto jwtDto = AuthTestBuilder.builder().build().buildJwtDto();
+        var signInDto = AuthTestBuilder.builder().build().buildSignInDto();
+        var jwtDto = AuthTestBuilder.builder().build().buildJwtDto();
 
         stubFor(post(urlPathEqualTo("/api/auth/signIn"))
                 .withHeader("Content-Type", equalTo("application/json"))
@@ -84,18 +84,18 @@ public class AuthClientTest {
     }
 
     @Test
-    public void signInShouldReturnException() throws JsonProcessingException {
-        SignInDto signInDto = AuthTestBuilder.builder().build().buildSignInDto();
+    public void checkShouldReturnJwtToken() {
+        var jwtDto = AuthTestBuilder.builder().build().buildJwtDto();
 
-        stubFor(post(urlPathEqualTo("/api/auth/signIn"))
-                .withHeader("Content-Type", equalTo("application/json"))
-                .withRequestBody(
-                        equalToJson(objectMapper.writeValueAsString(signInDto))
-                )
+        stubFor(post(urlPathEqualTo("/api/auth/check"))
+                .withHeader(AUTHORIZATION_HEADER, equalTo(jwtDto.accessToken()))
                 .willReturn(aResponse()
-                        .withStatus(302)));
+                        .withStatus(200)
+                        .withHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
+                        .withBody(String.valueOf(true))));
 
-        assertThrows(FeignException.class, () -> authClient.signIn(signInDto));
+        var actual = authClient.check(jwtDto.accessToken());
+
+        Assertions.assertTrue(actual);
     }
 }
-

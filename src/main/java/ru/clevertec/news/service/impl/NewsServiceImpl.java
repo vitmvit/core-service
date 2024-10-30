@@ -1,178 +1,168 @@
 package ru.clevertec.news.service.impl;
 
 import lombok.AllArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.data.domain.Page;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.clevertec.news.dto.NewsDto;
 import ru.clevertec.news.dto.create.NewsCreateDto;
+import ru.clevertec.news.dto.page.PageContentDto;
 import ru.clevertec.news.dto.update.NewsUpdateDto;
-import ru.clevertec.news.exception.EmptyListException;
-import ru.clevertec.news.exception.EntityNotFoundException;
 import ru.clevertec.news.exception.NoAccessError;
+import ru.clevertec.news.exception.OperationException;
+import ru.clevertec.news.facade.AuthenticationFacade;
 import ru.clevertec.news.feign.NewsClient;
 import ru.clevertec.news.service.NewsService;
 
-/**
- * Реализация сервиса новостей
- */
+import static ru.clevertec.news.constant.Constant.ADMIN_ROLE;
+
+@Slf4j
 @Service
 @AllArgsConstructor
 public class NewsServiceImpl implements NewsService {
 
     private final NewsClient newsClient;
-    private static final Logger logger = LoggerFactory.getLogger(NewsServiceImpl.class);
+    private final AuthenticationFacade authenticationFacade;
 
     /**
-     * Найти все новости с пагинацией
+     * Получить все новости с возможностью фильтрации и пагинации.
      *
-     * @param offset смещение
-     * @param limit  лимит
-     * @return страница новостей
+     * @param pageNumber номер страницы для пагинации
+     * @param pageSize   количество новостей на странице
+     * @param title      заголовок для фильтрации новостей
+     * @param text       текст для фильтрации новостей
+     * @return объект {@link PageContentDto} с содержимым новостей
+     * @throws OperationException если произошла ошибка при получении новостей
      */
     @Override
-    public Page<NewsDto> findAllNews(Integer offset, Integer limit) {
+    public PageContentDto<NewsDto> getAll(int pageNumber, int pageSize, String title, String text) {
         try {
-            logger.info("NewsService: find all news");
-            return newsClient.getAllNews(offset, limit);
+            log.info("NewsService: find all news");
+            return newsClient.getAll(pageNumber, pageSize, title, text);
         } catch (Exception e) {
-            logger.error("NewsService: Empty list error");
-            throw new EmptyListException();
+            log.error("NewsService: Get all error - " + e.getMessage());
+            throw new OperationException("Get all error - " + e.getMessage());
         }
     }
 
     /**
-     * Найти новость по идентификатору
+     * Получить новость по её идентификатору.
      *
      * @param id идентификатор новости
-     * @return новость
+     * @return объект {@link NewsDto} с найденной новостью
+     * @throws OperationException если произошла ошибка при получении новости
      */
     @Override
-    public NewsDto findNewsById(Long id) {
+    public NewsDto getNewsById(Long id) {
         try {
-            logger.info("NewsService: find news by id: " + id);
+            log.info("NewsService: find news by id: " + id);
             return newsClient.getNewsById(id);
         } catch (Exception e) {
-            logger.error("NewsService: Entity not found error");
-            throw new EntityNotFoundException();
+            log.error("NewsService: Get news by id error - " + e.getMessage());
+            throw new OperationException("Get news by id error - " + e.getMessage());
         }
     }
 
     /**
-     * Найти новость по идентификатору с комментариями и пагинацией
+     * Получить новость с комментариями по её идентификатору.
      *
-     * @param offset смещение
-     * @param limit  лимит
-     * @param id     идентификатор новости
-     * @return новость с комментариями
+     * @param pageNumber номер страницы для пагинации
+     * @param pageSize   количество комментариев на странице
+     * @param id         идентификатор новости
+     * @return объект {@link NewsDto} с найденной новостью и её комментариями
+     * @throws OperationException если произошла ошибка при получении новости с комментариями
      */
     @Override
-    public NewsDto findNewsByIdWithComments(Integer offset, Integer limit, Long id) {
+    public NewsDto getByIdWithComments(Integer pageNumber, Integer pageSize, Long id) {
         try {
-            logger.info("NewsService: find news with comments by id: " + id);
-            return newsClient.getByIdWithComments(offset, limit, id);
+            log.info("NewsService: find news with comments by id: " + id);
+            return newsClient.getByIdWithComments(pageNumber, pageSize, id);
         } catch (Exception e) {
-            logger.error("NewsService: Entity not found error");
-            throw new EntityNotFoundException();
+            log.error("NewsService: Get news by id error - " + e.getMessage());
+            throw new OperationException("Get news by id error - " + e.getMessage());
         }
     }
 
     /**
-     * Поиск новостей по фрагменту текста с пагинацией
+     * Создать новую новость.
+     * Метод проверяет права пользователя на удаление новости.
+     * Пользователь может создать новость, если он является её создателем или если его роль - администратор.
      *
-     * @param offset   смещение
-     * @param limit    лимит
-     * @param fragment текстовый фрагмент для поиска
-     * @return страница новостей
+     * @param dto объект данных для создания новости
+     * @return объект {@link NewsDto} с созданной новостью
+     * @throws NoAccessError      если пользователь не имеет прав для создания новости
+     * @throws OperationException если произошла ошибка при создании новости
      */
     @Override
-    public Page<NewsDto> searchNewsByText(Integer offset, Integer limit, String fragment) {
+    public NewsDto create(NewsCreateDto dto) {
         try {
-            logger.info("NewsService: search news by text fragment: " + fragment);
-            return newsClient.searchNewsByText(offset, limit, fragment);
+            log.info("NewsService: create news: " + dto);
+            var currentUserId = authenticationFacade.getCurrentUserId();
+            var currentUserRole = authenticationFacade.getCurrentUserRole();
+            log.info("NewsService: current role " + currentUserRole + "\n current id - " + currentUserId);
+            if (!currentUserRole.equals(ADMIN_ROLE) && !dto.getUserId().equals(currentUserId)) {
+                log.error("NewsService: No access error");
+                throw new NoAccessError();
+            }
+            return newsClient.create(dto);
         } catch (Exception e) {
-            logger.error("NewsService: Empty list error");
-            throw new EmptyListException();
+            log.error("NewsService: Create news error - " + e.getMessage());
+            throw new OperationException("Create news error - " + e.getMessage());
         }
     }
 
     /**
-     * Поиск новостей по фрагменту заголовка с пагинацией
+     * Обновить существующую новость.
+     * Метод проверяет права пользователя на удаление новости.
+     * Пользователь может обновить новость, если он является её создателем или если его роль - администратор.
      *
-     * @param offset   смещение
-     * @param limit    лимит
-     * @param fragment текстовый фрагмент для поиска
-     * @return страница новостей
+     * @param newsUpdateDto объект данных для обновления новости
+     * @return объект {@link NewsDto} с обновленной новостью
+     * @throws NoAccessError      если пользователь не имеет прав для обновления новости
+     * @throws OperationException если произошла ошибка при обновлении новости
      */
     @Override
-    public Page<NewsDto> searchNewsByTitle(Integer offset, Integer limit, String fragment) {
+    public NewsDto update(NewsUpdateDto newsUpdateDto) {
         try {
-            logger.info("NewsService: search news by title fragment: " + fragment);
-            return newsClient.searchNewsByText(offset, limit, fragment);
+            log.debug("NewsService: update news: " + newsUpdateDto);
+            var currentUserId = authenticationFacade.getCurrentUserId();
+            var currentUserRole = authenticationFacade.getCurrentUserRole();
+            log.info("NewsService: current role " + currentUserRole + "\n current id - " + currentUserId);
+            if (!currentUserRole.equals(ADMIN_ROLE) && !newsUpdateDto.getUserId().equals(currentUserId)) {
+                log.error("NewsService: No access error");
+                throw new NoAccessError();
+            }
+            return newsClient.update(newsUpdateDto);
         } catch (Exception e) {
-            logger.error("NewsService: Empty list error");
-            throw new EmptyListException();
+            log.error("NewsService: Update news error - " + e.getMessage());
+            throw new OperationException("Update news error - " + e.getMessage());
         }
     }
 
     /**
-     * Создать новость
+     * Удалить новость по её идентификатору.
+     * Метод проверяет права пользователя на удаление новости.
+     * Пользователь может удалить новость, если он является её создателем или если его роль - администратор.
      *
-     * @param newsCreateDto DTO для создания новости
-     * @param auth          данные аутентификации
-     * @return созданная новость
+     * @param id идентификатор новости, которую требуется удалить
+     * @throws NoAccessError      если пользователь не имеет прав для удаления новости
+     * @throws OperationException если произошла ошибка при удалении новости
      */
     @Override
-    public NewsDto createNews(NewsCreateDto newsCreateDto, String auth) {
+    public void delete(Long id) {
         try {
-            logger.debug("NewsService: create news: " + newsCreateDto);
-            return newsClient.createNews(newsCreateDto, auth);
+            log.debug("NewsService: delete news by id: " + id);
+            var currentUserId = authenticationFacade.getCurrentUserId();
+            var currentUserRole = authenticationFacade.getCurrentUserRole();
+            log.info("NewsService: current role " + currentUserRole + "\n current id - " + currentUserId);
+            var newsDto = newsClient.getNewsById(id);
+            if (!newsDto.getUserId().equals(currentUserId) && !currentUserRole.equals(ADMIN_ROLE)) {
+                log.error("NewsService: No access error");
+                throw new NoAccessError();
+            }
+            newsClient.delete(id);
         } catch (Exception e) {
-            logger.error("NewsService: No access error");
-            throw new NoAccessError();
-        }
-    }
-
-    /**
-     * Обновить новость
-     *
-     * @param newsUpdateDto DTO для обновления новости
-     * @param auth          данные аутентификации
-     * @return обновленная новость
-     */
-    @Override
-    public NewsDto updateNews(NewsUpdateDto newsUpdateDto, String auth) {
-        try {
-            logger.debug("NewsService: update news (get by id): " + newsUpdateDto.getId());
-            newsClient.getNewsById(newsUpdateDto.getId());
-        } catch (Exception e) {
-            throw new EmptyListException();
-        }
-        try {
-            logger.debug("NewsService: update news: " + newsUpdateDto);
-            return newsClient.updateNews(newsUpdateDto, auth);
-        } catch (Exception e) {
-            logger.error("NewsService: No access error");
-            throw new NoAccessError();
-        }
-    }
-
-    /**
-     * Удалить новость
-     *
-     * @param id     идентификатор новости
-     * @param userId идентификатор пользователя
-     * @param auth   данные аутентификации
-     */
-    @Override
-    public void deleteNews(Long id, Long userId, String auth) {
-        try {
-            logger.debug("NewsService: delete news by id: " + id);
-            newsClient.deleteNews(id, userId, auth);
-        } catch (Exception e) {
-            logger.error("NewsService: No access error");
-            throw new NoAccessError();
+            log.error("NewsService: Delete news error - " + e.getMessage());
+            throw new OperationException("Delete news error - " + e.getMessage());
         }
     }
 }

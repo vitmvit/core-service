@@ -4,6 +4,6 @@ public class Constant {
 
     public static final int OFFSET = 0;
     public static final int LIMIT = 3;
-
+    public static final String AUTHORIZATION_HEADER = "Authorization";
     public static final String USERNAME_NOT_EXIST = "Username not exists";
 }

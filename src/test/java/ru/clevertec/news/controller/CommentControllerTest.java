@@ -6,17 +6,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.support.PageableExecutionUtils;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
-import ru.clevertec.news.dto.CommentDto;
-import ru.clevertec.news.dto.create.CommentCreateDto;
-import ru.clevertec.news.dto.update.CommentUpdateDto;
+import ru.clevertec.news.dto.page.PageContentDto;
+import ru.clevertec.news.dto.page.PageDto;
 import ru.clevertec.news.exception.EmptyListException;
 import ru.clevertec.news.exception.EntityNotFoundException;
+import ru.clevertec.news.exception.NoAccessError;
 import ru.clevertec.news.service.CommentService;
 import ru.clevertec.news.util.CommentTestBuilder;
 
@@ -24,13 +21,15 @@ import java.util.List;
 
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static ru.clevertec.news.constant.Constant.LIMIT;
 import static ru.clevertec.news.constant.Constant.OFFSET;
 
 @SpringBootTest
-@AutoConfigureMockMvc
+@AutoConfigureMockMvc(addFilters = false)
 public class CommentControllerTest {
 
     @Autowired
@@ -43,139 +42,113 @@ public class CommentControllerTest {
     private CommentService commentService;
 
     @Test
-    public void getCommentByIdShouldReturnExpectedCommentDtoAndStatus200() throws Exception {
-        Long id = 1L;
-        CommentDto commentDto = CommentTestBuilder.builder().build().buildCommentDto();
+    public void getByIdShouldReturnExpectedCommentDtoAndStatus200() throws Exception {
+        var commentDto = CommentTestBuilder.builder().build().buildCommentDto();
+        var id = commentDto.getId();
 
-        when(commentService.findCommentById(id)).thenReturn(commentDto);
+        when(commentService.getById(id)).thenReturn(commentDto);
 
         mockMvc.perform(get("/api/comments/" + id))
                 .andExpect(status().isOk());
     }
 
     @Test
-    public void getCommentByIdShouldReturnException() throws Exception {
-        Long id = 20L;
+    public void getByIdShouldReturnException() throws Exception {
+        var id = 20L;
 
-        when(commentService.findCommentById(id)).thenThrow(EmptyListException.class);
+        when(commentService.getById(id)).thenThrow(EmptyListException.class);
 
         mockMvc.perform(get("/api/comments/" + id))
                 .andExpect(MvcResult::getResolvedException).getClass().equals(EntityNotFoundException.class);
     }
 
     @Test
-    public void searchCommentsByTextShouldReturnExpectedPageCommentsDtoAndStatus200() throws Exception {
-        String fragment = "t";
-        List<CommentDto> newsDtoList = List.of(
-                CommentTestBuilder.builder().build().buildCommentDto()
+    public void getAllShouldReturnExpectedPageCommentDtoAndStatus200() throws Exception {
+        var pageContent = new PageContentDto<>(
+                new PageDto(1, 10, 100, 1000L),
+                List.of(CommentTestBuilder.builder().build().buildCommentDto())
         );
-        Page<CommentDto> page = PageableExecutionUtils.getPage(
-                newsDtoList,
-                PageRequest.of(OFFSET, LIMIT),
-                newsDtoList::size);
 
-        when(commentService.searchCommentsByText(OFFSET, LIMIT, fragment)).thenReturn(page);
+        when(commentService.getAll(OFFSET, LIMIT, null, null)).thenReturn(pageContent);
 
-        mockMvc.perform(get("/api/comments/search/text/" + fragment + "?offset=" + OFFSET + "&limit=" + LIMIT)
+        mockMvc.perform(get("/api/comments?pageNumber=" + OFFSET + "&pageSize=" + LIMIT)
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andExpect(content().json(objectMapper.writeValueAsString(pageContent)));
     }
 
     @Test
-    public void searchCommentsByTextShouldReturnException() throws Exception {
-        String fragment = "0";
+    public void createShouldReturnCreatedCommentAndStatus201() throws Exception {
+        var commentCreateDto = CommentTestBuilder.builder().build().buildCommentCreateDto();
+        var commentDto = CommentTestBuilder.builder().build().buildCommentDto();
 
-        when(commentService.searchCommentsByText(OFFSET, LIMIT, fragment)).thenThrow(EmptyListException.class);
-
-        mockMvc.perform(get("/api/comments/search/text/" + fragment + "?offset=" + OFFSET + "&limit=" + LIMIT)
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(MvcResult::getResolvedException).getClass().equals(EmptyListException.class);
-    }
-
-    @Test
-    public void searchCommentsByUsernameShouldReturnExpectedPageCommentsDtoAndStatus200() throws Exception {
-        String fragment = "t";
-        List<CommentDto> newsDtoList = List.of(
-                CommentTestBuilder.builder().build().buildCommentDto()
-        );
-        Page<CommentDto> page = PageableExecutionUtils.getPage(
-                newsDtoList,
-                PageRequest.of(OFFSET, LIMIT),
-                newsDtoList::size);
-
-        when(commentService.searchCommentsByUsername(OFFSET, LIMIT, fragment)).thenReturn(page);
-
-        mockMvc.perform(get("/api/comments/search/username/" + fragment + "?offset=" + OFFSET + "&limit=" + LIMIT)
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
-    }
-
-    @Test
-    public void searchCommentsByUsernameShouldReturnException() throws Exception {
-        String fragment = "0";
-
-        when(commentService.searchCommentsByUsername(OFFSET, LIMIT, fragment)).thenThrow(EmptyListException.class);
-
-        mockMvc.perform(get("/api/comments/search/username/" + fragment + "?offset=" + OFFSET + "&limit=" + LIMIT)
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(MvcResult::getResolvedException).getClass().equals(EmptyListException.class);
-    }
-
-    @Test
-    public void createCommentShouldReturnCreatedCommentAndStatus201() throws Exception {
-        CommentCreateDto commentCreateDto = CommentTestBuilder.builder().build().buildCommentCreateDto();
-        String token = CommentTestBuilder.builder().build().getToken();
-        CommentDto commentDto = CommentTestBuilder.builder().build().buildCommentDto();
-
-        when(commentService.createComment(commentCreateDto, token)).thenReturn(commentDto);
+        when(commentService.create(commentCreateDto)).thenReturn(commentDto);
 
         mockMvc.perform(post("/api/comments")
-                        .header("Authorization", token)
                         .content(objectMapper.writeValueAsString(commentCreateDto))
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+                        .contentType(APPLICATION_JSON))
+                .andExpect(status().isCreated());
     }
 
     @Test
-    public void updateCommentShouldReturnUpdatedCommentAndStatus201() throws Exception {
-        CommentUpdateDto commentUpdateDto = CommentTestBuilder.builder().build().buildCommentUpdateDto();
-        String token = CommentTestBuilder.builder().build().getToken();
-        CommentDto commentDto = CommentTestBuilder.builder().build().buildCommentDto();
+    public void createShouldReturnException() throws Exception {
+        var commentCreateDto = CommentTestBuilder.builder().build().buildCommentCreateDto();
 
-        when(commentService.updateComment(commentUpdateDto, token)).thenReturn(commentDto);
+        when(commentService.create(commentCreateDto)).thenThrow(NoAccessError.class);
+
+        mockMvc.perform(post("/api/comments/")
+                        .content(objectMapper.writeValueAsString(commentCreateDto))
+                        .contentType(APPLICATION_JSON))
+                .andExpect(MvcResult::getResolvedException).getClass().equals(NoAccessError.class);
+    }
+
+    @Test
+    public void updateShouldReturnUpdatedCommentAndStatus201() throws Exception {
+        var commentUpdateDto = CommentTestBuilder.builder().build().buildCommentUpdateDto();
+        var commentDto = CommentTestBuilder.builder().build().buildCommentDto();
+
+        when(commentService.update(commentUpdateDto)).thenReturn(commentDto);
 
         mockMvc.perform(put("/api/comments")
-                        .header("Authorization", token)
                         .content(objectMapper.writeValueAsString(commentUpdateDto))
-                        .contentType(MediaType.APPLICATION_JSON))
+                        .contentType(APPLICATION_JSON))
                 .andExpect(status().isOk());
     }
 
     @Test
-    public void updateCommentShouldReturnExceptionAndStatus404() throws Exception {
-        CommentUpdateDto commentUpdateDto = CommentTestBuilder.builder().build().buildCommentUpdateDto();
+    public void updateShouldReturnExceptionAndStatus404() throws Exception {
+        var commentUpdateDto = CommentTestBuilder.builder().build().buildCommentUpdateDto();
         commentUpdateDto.setId(1000L);
-        String token = CommentTestBuilder.builder().build().getToken();
 
-        when(commentService.updateComment(commentUpdateDto, token)).thenThrow(EntityNotFoundException.class);
+        when(commentService.update(commentUpdateDto)).thenThrow(EntityNotFoundException.class);
 
         mockMvc.perform(put("/api/comments")
-                        .header("Authorization", token)
                         .content(objectMapper.writeValueAsString(commentUpdateDto))
-                        .contentType(MediaType.APPLICATION_JSON))
+                        .contentType(APPLICATION_JSON))
                 .andExpect(MvcResult::getResolvedException).getClass().equals(EntityNotFoundException.class);
     }
 
     @Test
-    public void deleteCommentShouldReturnStatus204() throws Exception {
-        Long id = 2L;
-        Long userId = 2L;
-        String token = CommentTestBuilder.builder().build().getToken();
+    public void updateShouldReturnException() throws Exception {
+        var commentUpdateDto = CommentTestBuilder.builder().build().buildCommentUpdateDto();
 
-        mockMvc.perform(delete("/api/comments/" + id + "/" + userId)
-                        .header("Authorization", token))
+        when(commentService.update(commentUpdateDto)).thenThrow(NoAccessError.class);
+
+        mockMvc.perform(get("/api/comments/")
+                        .content(objectMapper.writeValueAsString(commentUpdateDto))
+                        .contentType(APPLICATION_JSON))
+                .andExpect(MvcResult::getResolvedException).getClass().equals(NoAccessError.class);
+    }
+
+    @Test
+    public void deleteShouldReturnStatus204() throws Exception {
+        var id = 2L;
+
+        when(commentService.getById(id)).thenReturn(CommentTestBuilder.builder().build().buildCommentDto());
+
+        mockMvc.perform(delete("/api/comments/" + id))
                 .andExpect(status().isNoContent());
 
-        verify(commentService).deleteComment(id, userId, token);
+        verify(commentService).delete(id);
     }
 }

@@ -9,9 +9,6 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
-import ru.clevertec.news.dto.auth.SignInDto;
-import ru.clevertec.news.dto.update.NewsUpdateDto;
-import ru.clevertec.news.exception.EmptyListException;
 import ru.clevertec.news.exception.EntityNotFoundException;
 import ru.clevertec.news.exception.InvalidJwtException;
 import ru.clevertec.news.exception.NoAccessError;
@@ -26,7 +23,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static ru.clevertec.news.constant.Constant.*;
 
 @SpringBootTest
-@AutoConfigureMockMvc
+@AutoConfigureMockMvc(addFilters = false)
 public class GlobalExceptionHandlerIntegrationTest {
 
     @Autowired
@@ -43,28 +40,23 @@ public class GlobalExceptionHandlerIntegrationTest {
 
     @Test
     public void testHandleEntityNotFoundException() throws Exception {
-        Long id = 1L;
+        var id = 1L;
+        var signUpDto = AuthTestBuilder.builder().build().buildSignUpDto();
+        var jwtDto = AuthTestBuilder.builder().build().buildJwtDto();
 
-        when(newsService.findNewsByIdWithComments(OFFSET, LIMIT, id)).thenThrow(new EntityNotFoundException());
+        when(authClient.signUp(signUpDto)).thenReturn(jwtDto);
+        when(newsService.getByIdWithComments(OFFSET, LIMIT, id)).thenThrow(new EntityNotFoundException());
 
-        mockMvc.perform(get("/api/news/" + id))
+        mockMvc.perform(get("/api/news/" + id)
+                        .header(AUTHORIZATION_HEADER, jwtDto.accessToken()))
                 .andExpect(MvcResult::getResolvedException).getClass().equals(EntityNotFoundException.class);
     }
 
     @Test
-    public void testHandleEmptyListException() throws Exception {
-        when(newsService.findAllNews(OFFSET, LIMIT)).thenThrow(new EmptyListException());
-
-        mockMvc.perform(get("/api/news/", "?limit=" + LIMIT + "&offset=" + OFFSET))
-                .andExpect(MvcResult::getResolvedException).getClass().equals(EmptyListException.class);
-    }
-
-    @Test
     public void testHandleNoAccessException() throws Exception {
-        NewsUpdateDto newsUpdateDto = NewsTestBuilder.builder().build().buildNewsUpdateDto();
-        String token = NewsTestBuilder.builder().build().getToken();
+        var newsUpdateDto = NewsTestBuilder.builder().build().buildNewsUpdateDto();
 
-        when(newsService.updateNews(newsUpdateDto, token)).thenThrow(new NoAccessError());
+        when(newsService.update(newsUpdateDto)).thenThrow(new NoAccessError());
 
         mockMvc.perform(get("/api/news")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -74,7 +66,7 @@ public class GlobalExceptionHandlerIntegrationTest {
 
     @Test
     public void testHandleInvalidJwtException() throws Exception {
-        SignInDto signInDto = AuthTestBuilder.builder().build().buildSignInDto();
+        var signInDto = AuthTestBuilder.builder().build().buildSignInDto();
 
         when(authClient.signIn(AuthTestBuilder.builder().build().buildSignInDto())).thenThrow(new InvalidJwtException(USERNAME_NOT_EXIST));
 

@@ -9,9 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
-import ru.clevertec.news.dto.CommentDto;
-import ru.clevertec.news.dto.create.CommentCreateDto;
-import ru.clevertec.news.dto.update.CommentUpdateDto;
+import ru.clevertec.news.config.PostgresSqlContainerInitializer;
 import ru.clevertec.news.util.CommentTestBuilder;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
@@ -20,18 +18,19 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
 @ActiveProfiles("test")
-@WireMockTest(httpPort = 9998)
-public class CommentClientTest {
+@WireMockTest(httpPort = 9999)
+public class CommentClientTest extends PostgresSqlContainerInitializer {
 
     @Autowired
-    ObjectMapper objectMapper;
+    private ObjectMapper objectMapper;
+
     @Autowired
     private CommentClient commentClient;
 
     @Test
     public void getCommentByIdShouldReturnExpectedCommentDto() throws JsonProcessingException {
-        CommentDto commentDto = CommentTestBuilder.builder().build().buildCommentDto();
-        Long id = CommentTestBuilder.builder().build().getId();
+        var commentDto = CommentTestBuilder.builder().build().buildCommentDto();
+        var id = CommentTestBuilder.builder().build().getId();
 
         stubFor(get(urlPathTemplate("/api/comments/{id}"))
                 .withPathParam("id", matching("^(.*)([0-9]+)$"))
@@ -40,7 +39,7 @@ public class CommentClientTest {
                         .withHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
                         .withBody(objectMapper.writeValueAsString(commentDto))));
 
-        var actual = commentClient.getCommentById(id);
+        var actual = commentClient.getById(id);
 
         assertEquals(commentDto.getId(), actual.getId());
         assertEquals(commentDto.getUsername(), actual.getUsername());
@@ -50,7 +49,7 @@ public class CommentClientTest {
 
     @Test
     public void getCommentByIdShouldReturnExceptionAndStatus404() {
-        Long id = CommentTestBuilder.builder().build().getId();
+        var id = CommentTestBuilder.builder().build().getId();
 
         stubFor(get(urlPathTemplate("/api/comments/{id}"))
                 .withHeader("Content-Type", equalTo("application/json"))
@@ -58,18 +57,16 @@ public class CommentClientTest {
                 .willReturn(aResponse()
                         .withStatus(404)));
 
-        assertThrows(FeignException.class, () -> commentClient.getCommentById(id));
+        assertThrows(FeignException.class, () -> commentClient.getById(id));
     }
 
     @Test
     public void createCommentShouldReturnExpectedCommentDto() throws JsonProcessingException {
-        CommentCreateDto commentCreateDto = CommentTestBuilder.builder().build().buildCommentCreateDto();
-        CommentDto commentDto = CommentTestBuilder.builder().build().buildCommentDto();
-        String token = CommentTestBuilder.builder().build().getToken();
+        var commentCreateDto = CommentTestBuilder.builder().build().buildCommentCreateDto();
+        var commentDto = CommentTestBuilder.builder().build().buildCommentDto();
 
         stubFor(post(urlPathTemplate("/api/comments"))
                 .withHeader("Content-Type", equalTo("application/json"))
-                .withHeader("Authorization", equalTo(token))
                 .withRequestBody(
                         equalToJson(objectMapper.writeValueAsString(commentCreateDto))
                 )
@@ -78,7 +75,7 @@ public class CommentClientTest {
                         .withHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
                         .withBody(objectMapper.writeValueAsString(commentDto))));
 
-        var actual = commentClient.createComment(commentCreateDto, token);
+        var actual = commentClient.create(commentCreateDto);
 
         assertEquals(commentDto.getId(), actual.getId());
         assertEquals(commentDto.getUsername(), actual.getUsername());
@@ -88,39 +85,34 @@ public class CommentClientTest {
 
     @Test
     public void createCommentShouldReturnExceptionAndStatus403() throws JsonProcessingException {
-        CommentCreateDto commentCreateDto = CommentTestBuilder.builder().build().buildCommentCreateDto();
-        String token = CommentTestBuilder.builder().build().getToken();
+        var commentCreateDto = CommentTestBuilder.builder().build().buildCommentCreateDto();
 
         stubFor(post(urlPathTemplate("/api/comments"))
                 .withHeader("Content-Type", equalTo("application/json"))
-                .withHeader("Authorization", equalTo(token))
                 .withRequestBody(
                         equalToJson(objectMapper.writeValueAsString(commentCreateDto))
                 )
                 .willReturn(aResponse()
                         .withStatus(403)));
 
-        assertThrows(FeignException.class, () -> commentClient.createComment(commentCreateDto, token));
+        assertThrows(FeignException.class, () -> commentClient.create(commentCreateDto));
     }
 
     @Test
     public void updateCommentShouldReturnExpectedCommentDto() throws JsonProcessingException {
-        CommentUpdateDto commentUpdateDto = CommentTestBuilder.builder().build().buildCommentUpdateDto();
-        CommentDto commentDto = CommentTestBuilder.builder().build().buildCommentDto();
-        String token = CommentTestBuilder.builder().build().getToken();
+        var commentUpdateDto = CommentTestBuilder.builder().build().buildCommentUpdateDto();
+        var commentDto = CommentTestBuilder.builder().build().buildCommentDto();
 
         stubFor(put(urlPathTemplate("/api/comments"))
                 .withHeader("Content-Type", equalTo("application/json"))
-                .withHeader("Authorization", equalTo(token))
-                .withRequestBody(
-                        equalToJson(objectMapper.writeValueAsString(commentUpdateDto))
-                )
+                .withRequestBody(equalToJson(objectMapper.writeValueAsString(commentUpdateDto)))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
                         .withBody(objectMapper.writeValueAsString(commentDto))));
 
-        var actual = commentClient.updateComment(commentUpdateDto, token);
+
+        var actual = commentClient.update(commentUpdateDto);
 
         assertEquals(commentDto.getId(), actual.getId());
         assertEquals(commentDto.getUsername(), actual.getUsername());
@@ -130,66 +122,56 @@ public class CommentClientTest {
 
     @Test
     public void updateCommentShouldReturnExceptionAndStatus404() throws JsonProcessingException {
-        CommentUpdateDto commentUpdateDto = CommentTestBuilder.builder().build().buildCommentUpdateDto();
-        String token = CommentTestBuilder.builder().build().getToken();
+        var commentUpdateDto = CommentTestBuilder.builder().build().buildCommentUpdateDto();
 
         stubFor(put(urlPathTemplate("/api/comments"))
                 .withHeader("Content-Type", equalTo("application/json"))
-                .withHeader("Authorization", equalTo(token))
                 .withRequestBody(
                         equalToJson(objectMapper.writeValueAsString(commentUpdateDto))
                 )
                 .willReturn(aResponse()
                         .withStatus(404)));
 
-        assertThrows(FeignException.class, () -> commentClient.updateComment(commentUpdateDto, token));
+        assertThrows(FeignException.class, () -> commentClient.update(commentUpdateDto));
     }
 
     @Test
     public void updateCommentShouldReturnExceptionAndStatus403() throws JsonProcessingException {
-        CommentUpdateDto commentUpdateDto = CommentTestBuilder.builder().build().buildCommentUpdateDto();
-        String token = CommentTestBuilder.builder().build().getToken();
+        var commentUpdateDto = CommentTestBuilder.builder().build().buildCommentUpdateDto();
 
         stubFor(put(urlPathTemplate("/api/comments"))
                 .withHeader("Content-Type", equalTo("application/json"))
-                .withHeader("Authorization", equalTo(token))
                 .withRequestBody(
                         equalToJson(objectMapper.writeValueAsString(commentUpdateDto))
                 )
                 .willReturn(aResponse()
                         .withStatus(403)));
 
-        assertThrows(FeignException.class, () -> commentClient.updateComment(commentUpdateDto, token));
+        assertThrows(FeignException.class, () -> commentClient.update(commentUpdateDto));
     }
 
     @Test
     public void deleteCommentShouldReturnStatus200() {
-        Long id = CommentTestBuilder.builder().build().buildCommentDto().getId();
-        String token = CommentTestBuilder.builder().build().getToken();
+        var id = CommentTestBuilder.builder().build().buildCommentDto().getId();
 
-        stubFor(delete(urlPathTemplate("/api/comments/{id}/{userId}"))
-                .withHeader("Authorization", equalTo(token))
+        stubFor(delete(urlPathTemplate("/api/comments/{id}"))
                 .withPathParam("id", matching("^(.*)([0-9]+)$"))
-                .withPathParam("userId", matching("^(.*)([0-9]+)$"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withBody("")));
 
-        assertDoesNotThrow(() -> commentClient.deleteComment(id, id, token));
+        assertDoesNotThrow(() -> commentClient.delete(id));
     }
 
     @Test
     public void deleteCommentShouldReturnExceptionAndStatus403() {
-        Long id = CommentTestBuilder.builder().build().buildCommentDto().getId();
-        String token = CommentTestBuilder.builder().build().getToken();
+        var id = CommentTestBuilder.builder().build().buildCommentDto().getId();
 
-        stubFor(delete(urlPathTemplate("/api/comments/{id}/{userId}"))
-                .withHeader("Authorization", equalTo(token))
+        stubFor(delete(urlPathTemplate("/api/comments/{id}"))
                 .withPathParam("id", matching("^(.*)([0-9]+)$"))
-                .withPathParam("userId", matching("^(.*)([0-9]+)$"))
                 .willReturn(aResponse()
                         .withStatus(403)));
 
-        assertThrows(FeignException.class, () -> commentClient.deleteComment(id, id, token));
+        assertThrows(FeignException.class, () -> commentClient.delete(id));
     }
 }

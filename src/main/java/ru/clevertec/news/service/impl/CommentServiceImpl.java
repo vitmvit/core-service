@@ -1,143 +1,171 @@
 package ru.clevertec.news.service.impl;
 
 import lombok.AllArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.data.domain.Page;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.clevertec.news.dto.CommentDto;
 import ru.clevertec.news.dto.create.CommentCreateDto;
+import ru.clevertec.news.dto.page.PageContentDto;
 import ru.clevertec.news.dto.update.CommentUpdateDto;
-import ru.clevertec.news.exception.EmptyListException;
-import ru.clevertec.news.exception.EntityNotFoundException;
 import ru.clevertec.news.exception.NoAccessError;
+import ru.clevertec.news.exception.OperationException;
+import ru.clevertec.news.facade.AuthenticationFacade;
 import ru.clevertec.news.feign.CommentClient;
 import ru.clevertec.news.service.CommentService;
 
-/**
- * Реализация сервиса комментариев
- */
+import static ru.clevertec.news.constant.Constant.ADMIN_ROLE;
+
+@Slf4j
 @Service
 @Transactional
 @AllArgsConstructor
 public class CommentServiceImpl implements CommentService {
 
     private final CommentClient commentClient;
-    private static final Logger logger = LoggerFactory.getLogger(CommentServiceImpl.class);
+    private final AuthenticationFacade authenticationFacade;
 
     /**
-     * Найти комментарий по его идентификатору
+     * Получить комментарий по его идентификатору.
      *
      * @param id идентификатор комментария
-     * @return найденный комментарий
-     * @throws EntityNotFoundException если комментарий не найден
+     * @return объект {@link CommentDto} с найденным комментарием
+     * @throws OperationException если произошла ошибка при получении комментария
      */
     @Override
-    public CommentDto findCommentById(Long id) {
+    public CommentDto getById(Long id) {
         try {
-            logger.info("Service: find comment by id: " + id);
-            return commentClient.getCommentById(id);
+            log.info("CommentService: find comment by id: " + id);
+            return commentClient.getById(id);
         } catch (Exception e) {
-            logger.error("Service: Entity not found error");
-            throw new EntityNotFoundException();
+            log.error("CommentService: Get by id error - " + e.getMessage());
+            throw new OperationException("Get by id error - " + e.getMessage());
+        }
+    }
+
+
+    /**
+     * Получить все комментарии с возможностью фильтрации и пагинации.
+     *
+     * @param pageNumber номер страницы для пагинации
+     * @param pageSize   количество комментариев на странице
+     * @param username   имя пользователя для фильтрации комментариев
+     * @param text       текст для фильтрации комментариев
+     * @return объект {@link PageContentDto} с содержимым комментариев
+     * @throws OperationException если произошла ошибка при получении комментариев
+     */
+    @Override
+    public PageContentDto<CommentDto> getAll(int pageNumber, int pageSize, String username, String text) {
+        try {
+            log.info("CommentService: get all");
+            return commentClient.getAll(pageNumber, pageSize, username, text);
+        } catch (Exception e) {
+            log.error("CommentService: Get all comments error - " + e.getMessage());
+            throw new OperationException("Get all comments error - " + e.getMessage());
         }
     }
 
     /**
-     * Поиск комментариев по фрагменту текста комментария
+     * Получить комментарии по идентификатору новости.
      *
-     * @param offset   смещение в результате поиска
-     * @param limit    количество комментариев в результате поиска
-     * @param fragment фрагменту текста комментария для поиска
-     * @return страница комментариев
-     * @throws EmptyListException если список комментариев пуст
+     * @param pageNumber номер страницы для пагинации
+     * @param pageSize   количество комментариев на странице
+     * @param id         идентификатор новости
+     * @return объект {@link PageContentDto} с комментариями к указанной новости
+     * @throws OperationException если произошла ошибка при получении комментариев
      */
     @Override
-    public Page<CommentDto> searchCommentsByText(Integer offset, Integer limit, String fragment) {
+    public PageContentDto<CommentDto> getByNewsId(int pageNumber, int pageSize, Long id) {
         try {
-            logger.info("Service: search comment by text fragment: " + fragment);
-            return commentClient.searchCommentsByText(offset, limit, fragment);
+            log.info("CommentService: get by news id - " + id);
+            return commentClient.getByNewsId(pageNumber, pageSize, id);
         } catch (Exception e) {
-            logger.error("Service: Empty list error");
-            throw new EmptyListException();
+            log.error("CommentService: Get by news id error - " + e.getMessage());
+            throw new OperationException("Get by news id error - " + e.getMessage());
         }
     }
 
     /**
-     * Поиск комментариев по фрагменту имени пользователя
+     * Создать новый комментарий.
+     * Метод проверяет права пользователя на удаление комментария.
+     * Пользователь может создать комментарий, если он является его создателем или если его роль - администратор.
      *
-     * @param offset   смещение в результате поиска
-     * @param limit    количество комментариев в результате поиска
-     * @param fragment фрагмент имени пользователя для поиска комментариев
-     * @return страница комментариев
-     * @throws EmptyListException если список комментариев пуст
+     * @param dto объект данных для создания комментария
+     * @return объект {@link CommentDto} с созданным комментарием
+     * @throws NoAccessError      если пользователь не имеет прав для создания комментария
+     * @throws OperationException если произошла ошибка при создании комментария
      */
     @Override
-    public Page<CommentDto> searchCommentsByUsername(Integer offset, Integer limit, String fragment) {
+    public CommentDto create(CommentCreateDto dto) {
         try {
-            logger.info("Service: search comment by username fragment: " + fragment);
-            return commentClient.searchCommentByUsername(offset, limit, fragment);
+            log.info("CommentService: create news: " + dto);
+            var currentUsername = authenticationFacade.getCurrentUsername();
+            var currentUserRole = authenticationFacade.getCurrentUserRole();
+            log.info("CommentService: current role " + currentUserRole + "\n current id - " + currentUsername);
+            if (!currentUserRole.equals(ADMIN_ROLE) && !dto.getUsername().equals(currentUsername)) {
+                log.error("CommentService: No access error");
+                throw new NoAccessError();
+            }
+            return commentClient.create(dto);
         } catch (Exception e) {
-            logger.error("Service: Empty list error");
-            throw new EmptyListException();
+            log.error("CommentService: Create comment error - " + e.getMessage());
+            throw new OperationException("Create comment error - " + e.getMessage());
         }
     }
 
     /**
-     * Создать новый комментарий
+     * Обновить существующий комментарий.
+     * Метод проверяет права пользователя на удаление комментария.
+     * Пользователь может обновить комментарий, если он является его создателем или если его роль - администратор.
      *
-     * @param commentCreateDto данные для создания комментария
-     * @param auth             заголовок Authorization
-     * @return созданный комментарий
-     * @throws NoAccessError если нет доступа к созданию комментария
+     * @param dto объект данных для обновления комментария
+     * @return объект {@link CommentDto} с обновленным комментарием
+     * @throws NoAccessError      если пользователь не имеет прав для обновления комментария
+     * @throws OperationException если произошла ошибка при обновлении комментария
      */
     @Override
-    public CommentDto createComment(CommentCreateDto commentCreateDto, String auth) {
+    public CommentDto update(CommentUpdateDto dto) {
         try {
-            logger.debug("Service: create comment: " + commentCreateDto);
-            return commentClient.createComment(commentCreateDto, auth);
+            log.debug("CommentService: update comment: " + dto);
+            var currentUsername = authenticationFacade.getCurrentUsername();
+            var currentUserRole = authenticationFacade.getCurrentUserRole();
+            log.info("CommentService: current role " + currentUserRole + "\n current id - " + currentUsername);
+            if (!currentUserRole.equals(ADMIN_ROLE) && !dto.getUsername().equals(currentUsername)) {
+                log.error("CommentService: No access error");
+                throw new NoAccessError();
+            }
+            return commentClient.update(dto);
         } catch (Exception e) {
-            logger.error("Service: No access error");
-            throw new NoAccessError();
+            log.error("CommentService: Update comment error - " + e.getMessage());
+            throw new OperationException("Update comment error - " + e.getMessage());
         }
     }
 
     /**
-     * Обновить комментарий
+     * Удалить комментарий по его идентификатору.
+     * Метод проверяет права пользователя на удаление комментария.
+     * Пользователь может удалить комментарий, если он является его создателем или если его роль - администратор.
      *
-     * @param commentUpdateDto данные для обновления комментария
-     * @param auth             заголовок Authorization
-     * @return обновленный комментарий
-     * @throws NoAccessError если нет доступа к обновлению комментария
+     * @param id идентификатор комментария, который требуется удалить
+     * @throws NoAccessError      если пользователь не имеет прав для удаления комментария
+     * @throws OperationException если произошла ошибка при удалении комментария
      */
     @Override
-    public CommentDto updateComment(CommentUpdateDto commentUpdateDto, String auth) {
+    public void delete(Long id) {
         try {
-            logger.debug("Service: update comment: " + commentUpdateDto);
-            return commentClient.updateComment(commentUpdateDto, auth);
+            log.debug("CommentService: delete comment by id: " + id);
+            var currentUsername = authenticationFacade.getCurrentUsername();
+            var currentUserRole = authenticationFacade.getCurrentUserRole();
+            log.info("CommentService: current role " + currentUserRole + "\n current user name - " + currentUsername);
+            var newsDto = commentClient.getById(id);
+            if (!newsDto.getUsername().equals(currentUsername) && !currentUserRole.equals(ADMIN_ROLE)) {
+                log.error("CommentService: No access error");
+                throw new NoAccessError();
+            }
+            commentClient.delete(id);
         } catch (Exception e) {
-            logger.error("Service: No access error");
-            throw new NoAccessError();
-        }
-    }
-
-    /**
-     * Удалить комментарий
-     *
-     * @param id     идентификатор комментария
-     * @param userId идентификатор пользователя
-     * @param auth   заголовок Authorization
-     * @throws NoAccessError если нет доступа к удалению комментария
-     */
-    @Override
-    public void deleteComment(Long id, Long userId, String auth) {
-        try {
-            logger.debug("Service: delete comment by id: " + id);
-            commentClient.deleteComment(id, userId, auth);
-        } catch (Exception e) {
-            logger.error("Service: No access error");
-            throw new NoAccessError();
+            log.error("CommentService: Delete comment error - " + e.getMessage());
+            throw new OperationException("Delete comment error - " + e.getMessage());
         }
     }
 }
